@@ -6,3 +6,7 @@
 import os
 import pandas as pd
 from utils.scales import AnxietyLevel
+
+
+if __name__ == "__main__":
+    pass

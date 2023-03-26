@@ -7,6 +7,8 @@ import os
 import pandas as pd
 from argparse import ArgumentParser
 import logging
+from pathlib import Path
+import re
 from utils.scales import AnxietyLevel, Feeling, LikertScale4
 
 type = {
@@ -104,19 +106,23 @@ def label_anxiety(wesad_path: str) -> None:
         return
 
     for subject in subjects:
-        if subject[0] != "S":
-            logging.warning(f"Subject {subject} does not have a valid name.")
+        if subject == "STAI_data":
+            continue
+        if re.fullmatch(r"^S[0-9]{1,2}$", subject) is None:
+            logging.warning(f"Subject {subject} does not have a valid name.\n")
             continue
         logging.info(f"Processing subject {subject}")
 
+        questionnaire_path = os.path.join(wesad_path, subject, f"{subject}_quest.csv")
+        if not os.path.exists(questionnaire_path):
+            logging.warning(f"Subject {subject} does not have a questionnaire file.\n")
+            continue
+
         questionnaire = pd.read_csv(
-            os.path.join(wesad_path, subject, f"{subject}_quest.csv"),
+            questionnaire_path,
             sep=";",
             header=None,
         )
-        if questionnaire is None:
-            logging.warning(f"Subject {subject} does not have a questionnaire file.")
-            continue
         questionnaire[0].replace("# ", "", inplace=True, regex=True)
 
         condition = questionnaire.iloc[1].dropna().astype(str)
@@ -140,12 +146,16 @@ def label_anxiety(wesad_path: str) -> None:
             }
         )
         formatted["anxiety_level"] = formatted["stai_score"].apply(get_anxiety_level)
+        
+        output_path = os.path.join(wesad_path, "STAI_data")
+        Path(output_path).mkdir(parents=True, exist_ok=True)
+
         formatted.to_csv(
-            os.path.join(wesad_path, subject, f"{subject}_STAI.csv"), index=False
+            os.path.join(output_path, f"{subject}_STAI.csv"), index=False
         )
 
         logging.info(f"Anxiety levels: {formatted['anxiety_level'].ravel()}")
-        logging.info(f"Saved to '{os.path.join(wesad_path, subject, subject)}_STAI.csv'\n")
+        logging.info(f"Saved to '{os.path.join(output_path, subject)}_STAI.csv'\n")
 
 
 if __name__ == "__main__":
