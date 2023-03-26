@@ -3,47 +3,26 @@
 # References:
 # https://ubicomp.eti.uni-siegen.de/home/datasets/icmi18/
 
-from enum import IntEnum
 import os
 import pandas as pd
-
-
-class AnxietyLevel(IntEnum):
-    NoneOrLow = 0
-    Moderate = 1
-    High = 2
-
-
-class Feeling(IntEnum):
-    AtEase = 0
-    Nervous = 1
-    Jittery = 2
-    Relaxed = 3
-    Worried = 4
-    Pleasant = 5
-
-
-class LikertScale(IntEnum):
-    NotAtAll = 1
-    Somewhat = 2
-    Moderately = 3
-    Very = 4
-
+from argparse import ArgumentParser
+import logging
+from utils.scales import AnxietyLevel, Feeling, LikertScale4
 
 type = {
     "positive": {
         # level : weight
-        LikertScale.NotAtAll: 4,
-        LikertScale.Somewhat: 3,
-        LikertScale.Moderately: 2,
-        LikertScale.Very: 1,
+        LikertScale4.NotAtAll: 4,
+        LikertScale4.Somewhat: 3,
+        LikertScale4.Moderately: 2,
+        LikertScale4.Very: 1,
     },
     "negative": {
         # level : weight
-        LikertScale.NotAtAll: 1,
-        LikertScale.Somewhat: 2,
-        LikertScale.Moderately: 3,
-        LikertScale.Very: 4,
+        LikertScale4.NotAtAll: 1,
+        LikertScale4.Somewhat: 2,
+        LikertScale4.Moderately: 3,
+        LikertScale4.Very: 4,
     },
 }
 
@@ -65,7 +44,7 @@ def get_weight(item: int, level: int) -> int:
     :param level: Level number.
     :return: Weight of the item and level.
     """
-    return weights[Feeling(item)][LikertScale(level)]
+    return weights[Feeling(item)][LikertScale4(level)]
 
 
 def get_score(stai6: "pd.Series[int]") -> int:
@@ -104,36 +83,60 @@ def label_anxiety(wesad_path: str) -> None:
     Function for labeling anxiety using the shortened
     STAI questionnaire responses in the WESAD dataset.
 
+    The function will create a new CSV file for each subject
+    with the following columns:
+        - condition: condition in the experiment
+        - start: start time of the condition
+        - end: end time of the condition
+        - stai_score: shortened STAI score
+        - anxiety_level: anxiety level based on the shortened STAI score
+
     :param path: Path to the WESAD dataset.
     :return: None
     """
+    if not os.path.exists(wesad_path):
+        logging.error(f"Path '{wesad_path}' does not exist.")
+        return
+
     subjects = next(os.walk(wesad_path))[1]
+    if len(subjects) == 0:
+        logging.error(f"No subjects found in '{wesad_path}'")
+        return
+
     for subject in subjects:
-        print(f"Processing subject {subject}")
+        if subject[0] != "S":
+            logging.warning(f"Subject {subject} does not have a valid name.")
+            continue
+        logging.info(f"Processing subject {subject}")
+
         questionnaire = pd.read_csv(
             os.path.join(wesad_path, subject, f"{subject}_quest.csv"),
             sep=";",
             header=None,
         )
+        if questionnaire is None:
+            logging.warning(f"Subject {subject} does not have a questionnaire file.")
+            continue
         questionnaire[0].replace("# ", "", inplace=True, regex=True)
-        condition = questionnaire.iloc[1].dropna()
-        condition = condition[~condition.str.contains("ORDER|bRead|sRead|fRead")]
+
+        condition = questionnaire.iloc[1].dropna().astype(str)
+        condition = condition[~condition.str.contains("ORDER|bRead|sRead|fRead")].astype(str)
 
         stai = questionnaire[questionnaire[0] == "STAI"].dropna(axis=1)
         stai_score = stai.iloc[:, 1:].astype(int).apply(get_score, axis=1)
 
         start = questionnaire[questionnaire[0] == "START"].dropna(axis=1)
-        start = start.iloc[:, 1:].astype(float).iloc[:, : len(condition)]
+        start = start.iloc[:, 1:len(condition) + 1].astype(float)
 
         end = questionnaire[questionnaire[0] == "END"].dropna(axis=1)
-        end = end.iloc[:, 1:].astype(float).iloc[:, : len(condition)]
+        end = end.iloc[:, 1:len(condition) + 1].astype(float)
 
         formatted = pd.DataFrame(
             {
-                "condition": condition.values.ravel(),
+                "condition": condition.values,
                 "start": start.values.ravel(),
                 "end": end.values.ravel(),
-                "stai_score": stai_score.values.ravel(),
+                "stai_score": stai_score.values
             }
         )
         formatted["anxiety_level"] = formatted["stai_score"].apply(get_anxiety_level)
@@ -141,6 +144,15 @@ def label_anxiety(wesad_path: str) -> None:
             os.path.join(wesad_path, subject, f"{subject}_STAI.csv"), index=False
         )
 
+        logging.info(f"Anxiety levels: {formatted['anxiety_level'].ravel()}")
+        logging.info(f"Saved to '{os.path.join(wesad_path, subject, subject)}_STAI.csv'\n")
+
 
 if __name__ == "__main__":
-    label_anxiety("data/WESAD")
+    parser = ArgumentParser(
+        description="Script for labeling anxiety using the shortened STAI questionnaire responses in the WESAD dataset."
+    )
+    parser.add_argument("path", type=str, help="Path to the WESAD dataset")
+    args = parser.parse_args()
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+    label_anxiety(args.path)
