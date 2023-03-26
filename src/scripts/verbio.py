@@ -16,13 +16,13 @@ target_dirs = ['POST', 'PRE']
 
 def get_anxiety_level(score: int) -> AnxietyLevel:
     """
-    Returns the anxiety level of a given score based on these thresholds:
+    Returns the anxiety level of a given full STAI score based on these thresholds:
 
     - [20, 27] = 0 - none or low anxiety
     - [38, 44] = 1 - moderate anxiety
     - [45, 80] = 2 - high anxiety
 
-    :param score: STAI score.
+    :param score: Full STAI score.
     :return: Anxiety level.
     """
     if score <= 27:

@@ -64,7 +64,7 @@ def get_score(stai6: "pd.Series[int]") -> int:
 
 def get_anxiety_level(score: int) -> AnxietyLevel:
     """
-    Returns the anxiety level of a given score based on these thresholds:
+    Returns the anxiety level of a given shortened STAI score based on these thresholds:
 
     - [6, 11] = 0 - none or low anxiety
     - [12, 13] = 1 - moderate anxiety
