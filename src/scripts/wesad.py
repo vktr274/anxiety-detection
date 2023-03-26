@@ -74,7 +74,7 @@ def get_anxiety_level(score: int) -> AnxietyLevel:
     :return: Anxiety level.
     """
     if score <= 11:
-        return AnxietyLevel.NoneOrLow
+        return AnxietyLevel.NoOrLow
     if score <= 13:
         return AnxietyLevel.Moderate
     return AnxietyLevel.High

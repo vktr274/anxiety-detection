@@ -18,7 +18,7 @@ def get_anxiety_level(score: int) -> AnxietyLevel:
     """
     Returns the anxiety level of a given full STAI score based on these thresholds:
 
-    - [20, 27] = 0 - none or low anxiety
+    - [20, 27] = 0 - no or low anxiety
     - [38, 44] = 1 - moderate anxiety
     - [45, 80] = 2 - high anxiety
 
@@ -26,7 +26,7 @@ def get_anxiety_level(score: int) -> AnxietyLevel:
     :return: Anxiety level.
     """
     if score <= 27:
-        return AnxietyLevel.NoneOrLow
+        return AnxietyLevel.NoOrLow
     if score <= 44:
         return AnxietyLevel.Moderate
     return AnxietyLevel.High
