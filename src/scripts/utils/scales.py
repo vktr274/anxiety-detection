@@ -1,5 +1,6 @@
 from enum import IntEnum
 
+
 class AnxietyLevel(IntEnum):
     NoOrLow = 0
     Moderate = 1

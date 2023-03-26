@@ -41,7 +41,7 @@ weights = {
 def get_weight(item: int, level: int) -> int:
     """
     Returns the weight of a given item and level.
-    
+
     :param item: Item number.
     :param level: Level number.
     :return: Weight of the item and level.
@@ -126,33 +126,33 @@ def label_anxiety(wesad_path: str) -> None:
         questionnaire[0].replace("# ", "", inplace=True, regex=True)
 
         condition = questionnaire.iloc[1].dropna().astype(str)
-        condition = condition[~condition.str.contains("ORDER|bRead|sRead|fRead")].astype(str)
+        condition = condition[
+            ~condition.str.contains("ORDER|bRead|sRead|fRead")
+        ].astype(str)
 
         stai = questionnaire[questionnaire[0] == "STAI"].dropna(axis=1)
         stai_score = stai.iloc[:, 1:].astype(int).apply(get_score, axis=1)
 
         start = questionnaire[questionnaire[0] == "START"].dropna(axis=1)
-        start = start.iloc[:, 1:len(condition) + 1].astype(float)
+        start = start.iloc[:, 1 : len(condition) + 1].astype(float)
 
         end = questionnaire[questionnaire[0] == "END"].dropna(axis=1)
-        end = end.iloc[:, 1:len(condition) + 1].astype(float)
+        end = end.iloc[:, 1 : len(condition) + 1].astype(float)
 
         formatted = pd.DataFrame(
             {
                 "condition": condition.values,
                 "start": start.values.ravel(),
                 "end": end.values.ravel(),
-                "stai_score": stai_score.values
+                "stai_score": stai_score.values,
             }
         )
         formatted["anxiety_level"] = formatted["stai_score"].apply(get_anxiety_level)
-        
+
         output_path = os.path.join(wesad_path, "STAI_data")
         Path(output_path).mkdir(parents=True, exist_ok=True)
 
-        formatted.to_csv(
-            os.path.join(output_path, f"{subject}_STAI.csv"), index=False
-        )
+        formatted.to_csv(os.path.join(output_path, f"{subject}_STAI.csv"), index=False)
 
         logging.info(f"Anxiety levels: {formatted['anxiety_level'].ravel()}")
         logging.info(f"Saved to '{os.path.join(output_path, subject)}_STAI.csv'\n")
@@ -164,5 +164,5 @@ if __name__ == "__main__":
     )
     parser.add_argument("path", type=str, help="Path to the WESAD dataset")
     args = parser.parse_args()
-    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+    logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
     label_anxiety(args.path)
