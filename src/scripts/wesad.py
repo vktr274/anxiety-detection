@@ -1,4 +1,4 @@
-# Functions for preprocessing the WESAD dataset
+# Functions for processing the WESAD dataset
 
 # References:
 # https://ubicomp.eti.uni-siegen.de/home/datasets/icmi18/
@@ -229,7 +229,7 @@ def process_wesad(
         )
         formatted["anxiety_level"] = formatted["stai_score"].apply(get_anxiety_level)
 
-        output_path = os.path.join(wesad_path, "Processed", subject)
+        output_path = os.path.join(wesad_path, "Processed")
         Path(output_path).mkdir(parents=True, exist_ok=True)
 
         # Save STAI questionnaire results to CSV file.
@@ -315,10 +315,9 @@ def main() -> None:
     chan_bit = 2**16
     vcc = 3
 
-    # Conversion functions for the raw data to the desired units.
+    # Conversion function for the raw data to the desired units.
     si_conversion = {
         "ECG": lambda x: (x / chan_bit - 0.5) * vcc,
-        "EDA": lambda x: ((x / chan_bit) * vcc) / 0.12,
     }
 
     process_wesad(args.path, si_conversion, sampling_rate)
