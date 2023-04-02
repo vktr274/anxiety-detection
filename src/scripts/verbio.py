@@ -82,6 +82,6 @@ if __name__ == "__main__":
         description="Script for labeling anxiety using the STAI questionnaire scores in the VerBIO dataset."
     )
     parser.add_argument("path", type=str, help="Path to the VerBIO dataset")
-    logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
     args = parser.parse_args()
     label_anxiety(args.path)

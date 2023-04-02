@@ -138,7 +138,7 @@ def read_subject(
     """
     file_path = os.path.join(path, subject, f"{subject}_respiban.txt")
     if not os.path.exists(file_path):
-        logging.error(f"Subject {subject} does not have a respiban file")
+        logging.error(f"{subject}: subject does not have a respiban file")
         sys.exit(1)
     with open(os.path.join(path, subject, f"{subject}_respiban.txt")) as f:
         header = [f.readline() for _ in range(3)]
@@ -187,13 +187,13 @@ def process_wesad(
         if subject == "Processed":
             continue
         if re.fullmatch(r"^S[0-9]{1,2}$", subject) is None:
-            logging.warning(f"Subject {subject} does not have a valid name.\n")
+            logging.warning(f"{subject}: subject does not have a valid name.\n")
             continue
-        logging.info(f"Processing subject {subject}")
+        logging.info(f"{subject}: processing subject")
 
         questionnaire_path = os.path.join(wesad_path, subject, f"{subject}_quest.csv")
         if not os.path.exists(questionnaire_path):
-            logging.warning(f"Subject {subject} does not have a questionnaire file.\n")
+            logging.warning(f"{subject}: subject does not have a questionnaire file.\n")
             continue
 
         # Read questionnaire and get condition, STAI score,
@@ -236,8 +236,10 @@ def process_wesad(
         stai_outut = os.path.join(output_path, f"{subject}_STAI.csv")
         formatted.to_csv(stai_outut, index=False)
 
-        logging.info(f"Anxiety levels: {formatted['anxiety_level'].ravel()}")
-        logging.info(f"Saved to '{stai_outut}'")
+        logging.info(
+            f"{subject}: anxiety levels - {formatted['anxiety_level'].ravel()}"
+        )
+        logging.info(f"{subject}: STAI information saved to '{stai_outut}'")
 
         # Read respiban file and get the start time and DataFrame of measurements.
         _, respiban = read_subject(wesad_path, subject, conversions)
@@ -279,11 +281,16 @@ def process_wesad(
             )
 
             logging.info(
-                f"Saved {current_condition} with anxiety level {current_anxiety_level} to '{condition_output}'"
+                f"{subject}: saved {current_condition} with anxiety level {current_anxiety_level} to '{condition_output}'"
             )
 
 
 def create_cli() -> ArgumentParser:
+    """
+    Create the CLI parser for the script.
+
+    :return: The CLI parser.
+    """
     parser = ArgumentParser(
         description="Script for labeling measurements with anxiety levels using the shortened STAI questionnaire responses in the WESAD dataset."
     )
@@ -299,7 +306,7 @@ def main() -> None:
     cli = create_cli()
     args = cli.parse_args()
 
-    logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
     sampling_rate = 700  # Hz - sampling rate used for the RespiBAN device
 
