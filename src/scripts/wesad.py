@@ -4,6 +4,7 @@
 # https://ubicomp.eti.uni-siegen.de/home/datasets/icmi18/
 
 import os
+import sys
 import pandas as pd
 from argparse import ArgumentParser
 import logging
@@ -135,6 +136,10 @@ def read_subject(
     :param conversions: Dictionary of conversions of the raw data to the desired units.
     :return: Tuple of the start time and the DataFrame of the respiban file.
     """
+    file_path = os.path.join(path, subject, f"{subject}_respiban.txt")
+    if not os.path.exists(file_path):
+        logging.error(f"Subject {subject} does not have a respiban file")
+        sys.exit(1)
     with open(os.path.join(path, subject, f"{subject}_respiban.txt")) as f:
         header = [f.readline() for _ in range(3)]
         start_time, sensors = get_metadata(header)
@@ -170,12 +175,12 @@ def process_wesad(
     """
     if not os.path.exists(wesad_path):
         logging.error(f"Path '{wesad_path}' does not exist.")
-        return
+        sys.exit(1)
 
     subjects = next(os.walk(wesad_path))[1]
     if len(subjects) == 0:
         logging.error(f"No subjects found in '{wesad_path}'")
-        return
+        sys.exit(1)
 
     for subject in subjects:
         # Skip the processed folder and subjects with invalid names
